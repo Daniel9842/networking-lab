@@ -7,7 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.io.*;
+import java.lang.System.Logger.Level;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class HttpServer {
 	
@@ -71,7 +75,9 @@ public class HttpServer {
 				break;
 			}
 		}
+		
 		String responseMsg = getHtmlResource(path);
+		
 		out.println(responseMsg);
 		out.close();
 		in.close();
@@ -102,5 +108,21 @@ public class HttpServer {
                 + "Content-Type: "+ type +"\r\\n"
                 + "\r\n"
                 + outmsg;
+	}
+	
+	private String getComponentResource(URI resourceURI) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		String response = "";
+		try {
+			String classPath = resourceURI.toString().replaceAll("/appuser","");
+			Class componentService = Class.forName(classPath);
+			for(Method m:componentService.getDeclaredMethods()) {
+				if(m.isAnnotationPresent(componentService)) {
+					response = m.invoke(null).toString();
+				}
+			}
+		}catch(ClassNotFoundException ex) {
+			Logger.getLogger(HttpServer.class.getName());
+		}
+		return "";
 	}
 }
